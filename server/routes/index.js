@@ -9,4 +9,7 @@ module.exports = app => {
 
   app.post("/api/maps", mapsController.create);
   app.get("/api/maps", mapsController.list);
+  app.get("/api/maps/:mapId", mapsController.retrieve);
+  app.put("/api/maps/:mapId", mapsController.update);
+  app.delete("/api/maps/:mapId", mapsController.destroy);
 };
