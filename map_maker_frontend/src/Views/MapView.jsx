@@ -28,28 +28,36 @@ const MapView = () => {
   useEffect(() => {
     const fetchMaps = async () => {
       const fetchedMaps = await api.fetchAllMaps;
-      const [{ features, initial_viewport, name, id }] = fetchedMaps;
+      //const [{ features, initial_viewport, name, id }] = fetchedMaps;
       setAllMaps(fetchedMaps);
-      setSelectedMap(selectedMap => ({
-        ...selectedMap,
-        name,
-        id,
-        features,
-        viewPort: initial_viewport,
-      }));
+      // setSelectedMap({
+      //   name,
+      //   id,
+      //   features,
+      //   viewPort: initial_viewport,
+      //   selectedFeatureId: null,
+      // });
     };
     fetchMaps();
   }, []);
 
-  // useEffect(() => setSelectedMap(selectedMap => allMaps[0] || selectedMap), [
-  //   allMaps,
-  // ]);
+  // useEffect(() => {
+  //   const { id, name, features, initial_viewport: viewPort } =
+  //     allMaps[0] || selectedMap;
+  //   setSelectedMap(selectedMap => ({
+  //     ...selectedMap,
+  //     id,
+  //     name,
+  //     features,
+  //     viewPort,
+  //   }));
+  // }, [allMaps]);
 
   useEffect(
     () =>
       setSelectedMap(selectedMap => ({
         ...selectedMap,
-        selectedFeaturedId: null,
+        selectedFeatureId: null,
       })),
     [selectedMap.features],
   );
@@ -63,9 +71,7 @@ const MapView = () => {
   const handleSelect = ({ selectedFeature }) =>
     setSelectedMap(selectedMap => ({
       ...selectedMap,
-      selectedFeaturedId: selectedFeature
-        ? selectedFeature.properties.id
-        : null,
+      selectedFeatureId: selectedFeature ? selectedFeature.properties.id : null,
     }));
 
   const handleFeatureDelete = () =>
@@ -85,9 +91,8 @@ const MapView = () => {
     setAllMaps(allMaps => allMaps.filter(({ id }) => id !== deletedMapId));
   };
 
-  const handleNameChange = ({ target: { value } }) =>
-    setSelectedMap(selectedMap => ({ ...selectedMap, name: value }));
-
+  const handleInputNameChange = ({ target: { value } }) =>
+    setSelectedMap(setSelectedMap => ({ ...setSelectedMap, name: value }));
   const renderMapSelection = () => (
     <div
       style={{
@@ -96,9 +101,20 @@ const MapView = () => {
         justifyContent: "space-between",
       }}
     >
-      {allMaps.map(mapOption => (
-        <button key={mapOption.id} onClick={() => setSelectedMap(mapOption)}>
-          {mapOption.name}
+      {allMaps.map(({ name, id, initial_viewport: viewPort, features }) => (
+        <button
+          key={id}
+          onClick={() =>
+            setSelectedMap(selectedMap => ({
+              ...selectedMap,
+              name,
+              id,
+              viewPort,
+              features,
+            }))
+          }
+        >
+          {name}
         </button>
       ))}
     </div>
@@ -116,7 +132,6 @@ const MapView = () => {
       </select>
     </div>
   );
-
   return (
     <div
       style={{
@@ -151,7 +166,7 @@ const MapView = () => {
         selectedMode === EditorModes.EDITING && (
           <button onClick={handleFeatureDelete}>Delete This Shape</button>
         )}
-      <input type="text" onChange={handleNameChange} />
+      <input type="text" onChange={handleInputNameChange} />
       <button onClick={handleMapSubmit}>Save Map!</button>
       <button onClick={handleMapUpate}>Update Map!</button>
       <button onClick={handleMapDelete}>Delete Map!</button>

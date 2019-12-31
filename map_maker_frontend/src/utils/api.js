@@ -37,7 +37,7 @@ export const updateMap = (mapId, { name, viewPort, features }) =>
     }),
   });
 
-export const deleteMap = mapId =>
+export const deleteMap = mapId => {
   higherOrderFetch(`http://localhost:8000/api/maps/${mapId}`, {
     method: "DELETE",
     headers: {
@@ -46,3 +46,4 @@ export const deleteMap = mapId =>
     },
     credentials: "same-origin",
   });
+};
