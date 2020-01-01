@@ -28,15 +28,15 @@ const MapView = () => {
   useEffect(() => {
     const fetchMaps = async () => {
       const fetchedMaps = await api.fetchAllMaps;
-      //const [{ features, initial_viewport, name, id }] = fetchedMaps;
+      const [{ features, initial_viewport, name, id }] = fetchedMaps;
       setAllMaps(fetchedMaps);
-      // setSelectedMap({
-      //   name,
-      //   id,
-      //   features,
-      //   viewPort: initial_viewport,
-      //   selectedFeatureId: null,
-      // });
+      setSelectedMap({
+        name,
+        id,
+        features,
+        viewPort: initial_viewport,
+        selectedFeatureId: null,
+      });
     };
     fetchMaps();
   }, []);
@@ -81,6 +81,7 @@ const MapView = () => {
         ({ properties: { id } }) => id !== selectedMap.selectedFeatureId,
       ),
     }));
+
   const handleMapSubmit = () => api.createMap(selectedMap);
 
   const handleMapUpate = () => api.updateMap(selectedMap.id, selectedMap);
@@ -93,6 +94,7 @@ const MapView = () => {
 
   const handleInputNameChange = ({ target: { value } }) =>
     setSelectedMap(setSelectedMap => ({ ...setSelectedMap, name: value }));
+
   const renderMapSelection = () => (
     <div
       style={{
@@ -166,7 +168,11 @@ const MapView = () => {
         selectedMode === EditorModes.EDITING && (
           <button onClick={handleFeatureDelete}>Delete This Shape</button>
         )}
-      <input type="text" onChange={handleInputNameChange} />
+      <input
+        type="text"
+        onChange={handleInputNameChange}
+        value={selectedMap.name}
+      />
       <button onClick={handleMapSubmit}>Save Map!</button>
       <button onClick={handleMapUpate}>Update Map!</button>
       <button onClick={handleMapDelete}>Delete Map!</button>

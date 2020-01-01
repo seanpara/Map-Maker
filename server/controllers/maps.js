@@ -50,7 +50,7 @@ module.exports = {
         }
         return map
           .destroy()
-          .then(() => res.status(204).send())
+          .then(() => res.status(200).send({ message: "Map Deleted" }))
           .catch(error => res.status(400).send(error));
       })
       .catch(error => res.status(400).send(error));
