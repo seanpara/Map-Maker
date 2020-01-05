@@ -10,3 +10,17 @@ export const EDITOR_MODES = [
   { id: EditorModes.DRAW_POLYGON, text: "Draw Polygon" },
   { id: EditorModes.DRAW_RECTANGLE, text: "Draw Rectangle" },
 ];
+
+export const defaultMap = {
+  name: "placeholder map name",
+  id: null,
+  viewPort: {
+    width: 500,
+    height: 500,
+    latitude: 52.52,
+    longitude: 13.405,
+    zoom: 5,
+  },
+  features: [],
+  selectedFeatureId: null,
+};

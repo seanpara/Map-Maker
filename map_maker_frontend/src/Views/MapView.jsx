@@ -1,40 +1,27 @@
 import React, { useState, useEffect } from "react";
-import ReactMapGL from "react-map-gl";
-import { Editor, EditorModes } from "react-map-gl-draw";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { EditorModes } from "react-map-gl-draw";
 
-import * as api from "../utils/api";
-import { MAP_BOX_KEY } from "../config/keys";
-import { MAP_BOX_STYLE, EDITOR_MODES } from "../Constants";
+import Map from "../Components/Map";
+import * as api from "../api";
+import { prepareMapObjects } from "../utils";
+import { defaultMap } from "../Constants";
 
 const MapView = () => {
   const [allMaps, setAllMaps] = useState([]);
-  const [selectedMap, setSelectedMap] = useState({
-    name: "placeholder map name",
-    id: null,
-    viewPort: {
-      width: 500,
-      height: 500,
-      latitude: 52.52,
-      longitude: 13.405,
-      zoom: 5,
-    },
-    features: [],
-    selectedFeatureId: null,
-  });
+  const [selectedMap, setSelectedMap] = useState(defaultMap);
 
   const [selectedMode, setSelectedMode] = useState(EditorModes.READ_ONLY);
 
   useEffect(() => {
     const fetchMaps = async () => {
-      const fetchedMaps = await api.fetchAllMaps;
-      const [{ features, initial_viewport, name, id }] = fetchedMaps;
+      const fetchedMaps = prepareMapObjects(await api.fetchAllMaps);
+      const [{ features, viewPort, name, id }] = fetchedMaps;
       setAllMaps(fetchedMaps);
       setSelectedMap({
         name,
         id,
         features,
-        viewPort: initial_viewport,
+        viewPort,
         selectedFeatureId: null,
       });
     };
@@ -82,7 +69,26 @@ const MapView = () => {
       ),
     }));
 
-  const handleMapSubmit = () => api.createMap(selectedMap);
+  const handleMapSubmit = async () => {
+    const {
+      id,
+      name,
+      initial_viewport: viewPort,
+      features,
+    } = await api.createMap(selectedMap);
+    setAllMaps(allMaps => [
+      ...allMaps,
+      {
+        id,
+        name,
+        viewPort,
+        features,
+        selectedFeatureId: null,
+      },
+    ]);
+  };
+
+  const handleNewMapSet = () => setSelectedMap(defaultMap);
 
   const handleMapUpate = () => api.updateMap(selectedMap.id, selectedMap);
 
@@ -90,10 +96,20 @@ const MapView = () => {
     const { id: deletedMapId } = selectedMap;
     await api.deleteMap(deletedMapId);
     setAllMaps(allMaps => allMaps.filter(({ id }) => id !== deletedMapId));
+    setSelectedMap(defaultMap);
   };
 
   const handleInputNameChange = ({ target: { value } }) =>
     setSelectedMap(setSelectedMap => ({ ...setSelectedMap, name: value }));
+
+  const handleMapSelect = ({ features, id, name, viewPort }) =>
+    setSelectedMap({
+      name,
+      id,
+      features,
+      viewPort,
+      selectedFeatureId: null,
+    });
 
   const renderMapSelection = () => (
     <div
@@ -101,39 +117,17 @@ const MapView = () => {
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
+        overflowX: "scroll",
       }}
     >
-      {allMaps.map(({ name, id, initial_viewport: viewPort, features }) => (
-        <button
-          key={id}
-          onClick={() =>
-            setSelectedMap(selectedMap => ({
-              ...selectedMap,
-              name,
-              id,
-              viewPort,
-              features,
-            }))
-          }
-        >
-          {name}
+      {allMaps.map(mapOption => (
+        <button key={mapOption.id} onClick={() => handleMapSelect(mapOption)}>
+          {mapOption.name}
         </button>
       ))}
     </div>
   );
 
-  const renderToolbar = () => (
-    <div style={{ position: "absolute", top: 0, right: 0, maxWidth: "320px" }}>
-      <select onChange={switchMode}>
-        <option value="">--Please choose a mode--</option>
-        {EDITOR_MODES.map(({ id, text }) => (
-          <option key={id} value={id}>
-            {text}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
   return (
     <div
       style={{
@@ -144,38 +138,20 @@ const MapView = () => {
       }}
     >
       {renderMapSelection()}
-      <ReactMapGL
-        {...selectedMap.viewPort}
-        onViewportChange={newViewPort =>
-          setSelectedMap(selectedMap => ({
-            ...selectedMap,
-            viewPort: newViewPort,
-          }))
-        }
-        mapStyle={MAP_BOX_STYLE}
-        mapboxApiAccessToken={MAP_BOX_KEY}
-      >
-        <Editor
-          clickRadius={12}
-          mode={selectedMode}
-          features={selectedMap.features}
-          onUpdate={handleUpdate}
-          onSelect={handleSelect}
-        />
-        {renderToolbar()}
-      </ReactMapGL>
-      {selectedMap.selectedFeatureId &&
-        selectedMode === EditorModes.EDITING && (
-          <button onClick={handleFeatureDelete}>Delete This Shape</button>
-        )}
-      <input
-        type="text"
-        onChange={handleInputNameChange}
-        value={selectedMap.name}
+      <Map
+        selectedMap={selectedMap}
+        setSelectedMap={setSelectedMap}
+        selectedMode={selectedMode}
+        switchMode={switchMode}
+        handleUpdate={handleUpdate}
+        handleSelect={handleSelect}
+        handleFeatureDelete={handleFeatureDelete}
+        handleInputNameChange={handleInputNameChange}
+        handleNewMapSet={handleNewMapSet}
+        handleMapSubmit={handleMapSubmit}
+        handleMapUpate={handleMapUpate}
+        handleMapDelete={handleMapDelete}
       />
-      <button onClick={handleMapSubmit}>Save Map!</button>
-      <button onClick={handleMapUpate}>Update Map!</button>
-      <button onClick={handleMapDelete}>Delete Map!</button>
     </div>
   );
 };
