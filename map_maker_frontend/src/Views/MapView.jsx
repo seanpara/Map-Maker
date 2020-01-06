@@ -90,7 +90,12 @@ const MapView = () => {
 
   const handleNewMapSet = () => setSelectedMap(defaultMap);
 
-  const handleMapUpate = () => api.updateMap(selectedMap.id, selectedMap);
+  const handleMapUpate = async () => {
+    await api.updateMap(selectedMap.id, selectedMap);
+    setAllMaps(allMaps =>
+      allMaps.map(map => (map.id === selectedMap.id ? selectedMap : map)),
+    );
+  };
 
   const handleMapDelete = async () => {
     const { id: deletedMapId } = selectedMap;
@@ -102,7 +107,7 @@ const MapView = () => {
   const handleInputNameChange = ({ target: { value } }) =>
     setSelectedMap(setSelectedMap => ({ ...setSelectedMap, name: value }));
 
-  const handleMapSelect = ({ features, id, name, viewPort }) =>
+  const handleMapSelect = ({ features, id, name, viewPort }) => {
     setSelectedMap({
       name,
       id,
@@ -110,6 +115,7 @@ const MapView = () => {
       viewPort,
       selectedFeatureId: null,
     });
+  };
 
   const renderMapSelection = () => (
     <div
